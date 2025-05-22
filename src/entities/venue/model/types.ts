@@ -9,9 +9,3 @@ export interface Venue {
     image_url: string | null;
     event_date: string | null;
 }
-
-export interface Profile {
-    id: string;
-    role: "user" | "admin";
-    created_at: string;
-}

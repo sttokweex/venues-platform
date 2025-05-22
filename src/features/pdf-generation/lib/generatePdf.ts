@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { Venue } from "../types";
+import { Venue } from "../../../shared/types";
 import fontkit from "@pdf-lib/fontkit";
 
 export const generatePDF = async (venue: Venue) => {
