@@ -18,6 +18,7 @@ import { Spinner } from "@shared/ui/Spinner";
 import { Card } from "@shared/ui/Card";
 import { supabase } from "@shared/lib/supabase";
 import { Venue } from "@entities/venue/model/types";
+import { sendAdminEntityCreationEmail } from "@shared/lib/mailgun";
 
 export default function AdminDashboard() {
     const [venues, setVenues] = useState<Venue[]>([]);
@@ -30,9 +31,8 @@ export default function AdminDashboard() {
 
     const fetchVenuesData = useCallback(async (userId: string) => {
         try {
-            console.log("Fetching admin venues for user:", userId);
-            const data = await fetchVenues(userId); // Фильтр по owner_user_id
-            console.log("Admin venues fetched:", data);
+            const data = await fetchVenues(userId);
+
             setVenues(data);
         } catch (err: unknown) {
             setNotification(err instanceof Error ? err.message : "Unknown error");

@@ -1,13 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { checkAuth } from "@features/auth/lib/checkAuth";
-import { logout } from "@features/auth/lib/logout";
-import { fetchVenues } from "@features/venue-management/lib/fetchVenues";
-import { generatePDF } from "@features/pdf-generation/lib/generatePdf";
-import { Profile } from "@entities/profile/model/types";
+import { supabase } from "@shared/lib/supabase";
 import { Venue } from "@entities/venue/model/types";
 import { Card } from "@shared/ui/Card";
 import { Button } from "@shared/ui/Button";
@@ -15,57 +10,21 @@ import { Spinner } from "@shared/ui/Spinner";
 
 export default function Home() {
     const [venues, setVenues] = useState<Venue[]>([]);
-    const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
-    const isMounted = useRef(false);
 
     useEffect(() => {
-        if (isMounted.current) return;
-        isMounted.current = true;
-
-        const fetchData = async () => {
-            try {
-                console.log("Fetching user data...");
-                await checkAuth(router, setProfile, setLoading);
-            } catch (err: unknown) {
-                console.error("Error fetching data:", err instanceof Error ? err.message : "Unknown error");
-            } finally {
-                setLoading(false);
+        const fetchVenues = async () => {
+            setLoading(true);
+            const { data, error } = await supabase.from("venues").select("*");
+            if (error) {
+                console.error("Error fetching venues:", error);
+            } else {
+                setVenues(data as Venue[]);
             }
+            setLoading(false);
         };
-        fetchData();
-
-        return () => {
-            isMounted.current = false;
-        };
-    }, [router]);
-
-    useEffect(() => {
-        if (!profile || loading) return;
-
-        const fetchVenuesData = async () => {
-            try {
-                console.log("Fetching all venues for user:", profile.role);
-                const data = await fetchVenues(); // Без ownerUserId для всех площадок
-                console.log("Venues fetched:", data);
-                setVenues(data);
-            } catch (err: unknown) {
-                console.error("Error fetching venues:", err instanceof Error ? err.message : "Unknown error");
-            }
-        };
-        fetchVenuesData();
-    }, [profile, loading]);
-
-    const handleLogout = async () => {
-        try {
-            console.log("Logging out...");
-            await logout();
-            router.push("/auth");
-        } catch (err: unknown) {
-            console.error("Logout error:", err instanceof Error ? err.message : "Unknown error");
-        }
-    };
+        fetchVenues();
+    }, []);
 
     if (loading) {
         return (
@@ -75,70 +34,37 @@ export default function Home() {
         );
     }
 
-    if (!profile) {
-        return (
-            <div className="container mx-auto p-6">
-                <Card className="mb-6">
-                    <h1 className="text-3xl font-bold mb-4">Venue Booking Platform</h1>
-                    <p className="text-gray-600">Please log in to continue.</p>
-                    <Link href="/auth" className="text-blue-600 hover:underline">
-                        Go to Login
-                    </Link>
-                </Card>
-            </div>
-        );
-    }
-
     return (
-        <div className="container mx-auto p-6">
-            <Card className="mb-6">
-                <h1 className="text-3xl font-bold mb-4">Venue Booking Platform</h1>
-                <div className="flex flex-col space-y-2">
-                    {profile.role === "admin" && (
-                        <Link href="/admin" className="text-blue-600 hover:underline">
-                            Go to Admin Dashboard
-                        </Link>
-                    )}
-                    <Button variant="secondary" size="sm" onClick={handleLogout} className="w-fit">
-                        Logout
-                    </Button>
-                </div>
-            </Card>
-            <h2 className="text-2xl font-semibold mb-4">All Venues</h2>
-            {venues.length === 0 ? (
-                <p className="text-gray-600">
-                    No venues available.{" "}
-                    {profile.role === "admin" ? "Create one in the Admin Dashboard." : "Check back later!"}
-                </p>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {venues.map((venue) => (
-                        <Card key={venue.id}>
-                            <h3 className="text-lg font-semibold">
-                                <Link href={`/venues/${venue.id}`} className="text-blue-600 hover:underline">
-                                    {venue.name}
-                                </Link>
-                            </h3>
+        <div className="container py-12">
+            <h1 className="text-4xl font-bold text-center mb-12 animate-fade-in">Explore Our Venues</h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {venues.map((venue) => (
+                    <Link key={venue.id} href={`/venues/${venue.id}`} className="group">
+                        <Card className="h-full transition-transform duration-200 transform group-hover:scale-105 group-hover:shadow-lg animate-slide-up">
                             {venue.image_url && (
                                 <img
                                     src={venue.image_url}
                                     alt={venue.name}
-                                    className="w-full h-48 object-cover rounded-lg mt-2"
+                                    className="w-full h-48 object-cover rounded-t-lg"
                                 />
                             )}
-                            <p className="text-gray-600 mt-2">Address: {venue.address}</p>
-                            <p className="text-gray-600">Capacity: {venue.capacity}</p>
-                            <p className="text-gray-600">Phone: {venue.phone || "N/A"}</p>
-                            <p className="text-gray-600">
-                                Event Date: {venue.event_date ? new Date(venue.event_date).toLocaleString() : "N/A"}
-                            </p>
-                            <Button variant="primary" size="sm" className="mt-4" onClick={() => generatePDF(venue)}>
-                                Download PDF
-                            </Button>
+                            <div className="p-6">
+                                <h2 className="text-xl font-semibold mb-2">{venue.name}</h2>
+                                <p className="text-neutral-600 mb-2 line-clamp-2">{venue.address}</p>
+                                <p className="text-neutral-600 mb-4">Capacity: {venue.capacity}</p>
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    className="w-full transition-transform duration-200 hover:scale-105"
+                                >
+                                    View Details
+                                </Button>
+                            </div>
                         </Card>
-                    ))}
-                </div>
-            )}
+                    </Link>
+                ))}
+            </div>
+            {venues.length === 0 && <p className="text-center text-neutral-600 mt-12">No venues available.</p>}
         </div>
     );
 }

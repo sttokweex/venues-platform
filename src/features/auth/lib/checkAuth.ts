@@ -7,7 +7,6 @@ export const checkAuth = async (
     setProfile: (profile: Profile | null) => void,
     setLoading: (loading: boolean) => void
 ): Promise<boolean> => {
-    console.log("Starting checkAuth...");
     try {
         setLoading(true);
         const {
@@ -26,7 +25,6 @@ export const checkAuth = async (
             router.push("/auth");
             return false;
         }
-        console.log("User ID:", user.id);
 
         const { data, error } = await supabase.from("profiles").select("role, created_at").eq("id", user.id).single();
 
@@ -44,10 +42,10 @@ export const checkAuth = async (
         }
 
         console.log("Profile fetched:", data);
-        setProfile(data as Profile); // Устанавливаем профиль для всех пользователей
+        setProfile(data as Profile);
         const isAdmin = data.role === "admin";
         console.log("Is admin:", isAdmin);
-        return isAdmin; // Возвращаем true только для админов
+        return isAdmin;
     } catch (err: any) {
         console.error("Error in checkAuth:", err.message);
         setProfile(null);
