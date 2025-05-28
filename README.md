@@ -10,7 +10,7 @@ A web app for booking venues, built with Next.js, Supabase, Tailwind CSS, and St
 - Image uploads to Supabase Storage
 - Simulated email notifications for admins (console logs)
 - Responsive UI with Tailwind CSS and animations
-- FSD architecture (`features`, `entities`, `shared`)
+- FSD architecture
 - Stripe webhooks for payment processing
 
 ## Tech Stack
@@ -29,15 +29,14 @@ A web app for booking venues, built with Next.js, Supabase, Tailwind CSS, and St
 - npm
 - Supabase account: [supabase.com](https://supabase.com)
 - Stripe account (test mode): [stripe.com](https://stripe.com)
-- Git & GitHub
-- Vercel account (optional, for deployment)
+- Git 
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/sttokweex/venues-platform
+   cd venues-platform
 2. Install dependencies:
     ```bash
     npm install
